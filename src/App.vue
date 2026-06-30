@@ -1,6 +1,5 @@
 <script setup>
   import {ref} from 'vue';
-  import { GoogleGenerativeAI } from "@google/generative-ai";
 
 
     const result = ref(null);
@@ -34,70 +33,21 @@
       analyzeButtonState.value = false;
       errorMsg.value = '';
 
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) {
-        errorMsg.value = 'No API key found. Add VITE_GEMINI_API_KEY to your .env file and restart the dev server (Vite only reads .env at startup).';
-        analyzeButtonState.value = true;
-        return;
-      }
-
       try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
-        const prompt = `
-You are an expert college admissions counselor. Analyze the following college application essay
-and return ONLY a raw JSON object. No markdown, no backticks, no explanation — just the JSON.
+        // Call our own serverless function — the API key stays on the server.
+        const res = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ essay: ta.value }),
+        });
 
-The JSON must follow this exact structure:
+        const data = await res.json();
 
-{
-  "overallAssessment": {
-    "score": <number 1-10>,
-    "summary": "<3-4 sentence overall assessment of the essay>"
-  },
-  "criteria": [
-    {
-      "title": "Authentic Voice",
-      "description": "<2-3 sentences evaluating how genuine and unique the student's voice is>",
-      "score": <number 1-10>
-    },
-    {
-      "title": "Central Message",
-      "description": "<2-3 sentences evaluating how clear and focused the main idea is>",
-      "score": <number 1-10>
-    },
-    {
-      "title": "Reflection & Insight",
-      "description": "<2-3 sentences evaluating the depth of self-reflection and lessons learned>",
-      "score": <number 1-10>
-    },
-    {
-      "title": "Specific Details",
-      "description": "<2-3 sentences evaluating the use of concrete, vivid, specific storytelling>",
-      "score": <number 1-10>
-    },
-    {
-      "title": "Structure & Clarity",
-      "description": "<2-3 sentences evaluating the essay's opening, flow, transitions, and conclusion>",
-      "score": <number 1-10>
-    }
-  ]
-}
+        if (!res.ok) {
+          throw new Error(data.error || `Request failed (${res.status})`);
+        }
 
-Essay:
-"""
-${ta.value}
-"""
-  `;
-
-        const response = await model.generateContent(prompt);
-        const text = response.response.text();
-
-        // Strip markdown fences just in case Gemini adds them
-        const clean = text.replace(/```json|```/g, "").trim();
-        const rr = JSON.parse(clean);
-
-        result.value = rr;
+        result.value = data;
         analyzeButtonState.value = true;
 
         // Scroll the results into view
