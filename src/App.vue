@@ -1,5 +1,6 @@
 <script setup>
   import {ref} from 'vue';
+  import './App.css';
 
 
     const result = ref(null);
@@ -20,6 +21,20 @@
       const ta = document.getElementById('essayInput');
       const wc = countWords(ta.value);
       document.getElementById('wordCount').textContent = `${wc} / 650 words`;
+    }
+
+    function downloadFixedEssay() {
+      if (!result.value?.fixedEssay) return;
+
+      const blob = new Blob([result.value.fixedEssay], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'revised-essay.txt';
+      link.click();
+
+      URL.revokeObjectURL(url);
     }
 
     async function handleAnalyze() {
@@ -160,348 +175,14 @@
         </div>
 
         <p class="overall-card__summary">{{ result.overallAssessment.summary }}</p>
+        <p v-if="result.fixedEssay">We have fixed your essay based on the feedback provided.</p>
+        <p v-if="result.fixedEssay"><button @click="downloadFixedEssay">DOWNLOAD IT</button></p>
+
       </div>
     </div>
   </section>
+
+  <footer class="site-footer">
+    <a href="/privacy-policy.html">Privacy Policy</a>
+  </footer>
 </template>
-
-<style >
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-      background: linear-gradient(
-        180deg,
-        #5bb8d8 0%,
-        #7ecde8 18%,
-        #a8dff0 36%,
-        #c8eef6 52%,
-        #d8f3f0 66%,
-        #e5f8f0 80%,
-        #ffffff 100%
-      );
-    }
-
-    /* ─── HERO ─────────────────────────────── */
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: clamp(120px, 18vh, 180px);
-      padding-bottom: 80px;
-      text-align: center;
-      padding-left: 16px;
-      padding-right: 16px;
-    }
-
-    .hero__eyebrow {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.75);
-      margin-bottom: 18px;
-    }
-
-    .hero__headline {
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 800;
-      color: #ffffff;
-      line-height: 1.1;
-      letter-spacing: -0.02em;
-      max-width: 660px;
-    }
-
-    .hero__sub {
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      font-weight: 600;
-      color: rgba(255,255,255,0.9);
-      line-height: 1.45;
-      max-width: 500px;
-      margin-top: 10px;
-    }
-
-    /* ─── EDITOR CARD ───────────────────────── */
-    .editor-card {
-      width: 100%;
-      max-width: 800px;
-      margin-top: 28px;
-      background: #ffffff;
-      border-radius: 18px;
-      box-shadow: 0 6px 40px rgba(0,0,0,0.18);
-      overflow: hidden;
-    }
-
-    .editor-card__toolbar {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 14px 20px;
-      border-bottom: 1px solid #f0f0f0;
-      background: #fafafa;
-    }
-
-    .toolbar-dot {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-    }
-    .toolbar-dot--red   { background: #FF5F57; }
-    .toolbar-dot--amber { background: #FEBC2E; }
-    .toolbar-dot--green { background: #28C840; }
-
-    .editor-card__label {
-      margin-left: auto;
-      font-size: 0.7rem;
-      font-weight: 600;
-      color: #aaa;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .editor-card__body {
-      padding: 24px;
-    }
-
-    .essay-textarea {
-      width: 100%;
-      min-height: 280px;
-      border: none;
-      outline: none;
-      resize: none;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.92rem;
-      color: #222;
-      line-height: 1.7;
-      background: transparent;
-      caret-color: #5bb8d8;
-    }
-
-    .essay-textarea::placeholder {
-      color: #bbb;
-    }
-
-    .editor-card__footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 24px 18px;
-      border-top: 1px solid #f0f0f0;
-    }
-
-    .word-count {
-      font-size: 0.78rem;
-      color: #bbb;
-      font-weight: 500;
-    }
-
-    .btn-analyze {
-      background: linear-gradient(135deg, #5bb8d8 0%, #3da8cf 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 26px;
-      font-size: 0.88rem;
-      font-weight: 700;
-      letter-spacing: 0.01em;
-      cursor: pointer;
-      transition: opacity 0.18s, transform 0.18s;
-      box-shadow: 0 3px 14px rgba(91,184,216,0.38);
-    }
-
-    .btn-analyze:hover {
-      opacity: 0.88;
-      transform: translateY(-1px);
-    }
-
-    .btn-analyze:active {
-      transform: translateY(0);
-    }
-
-    .btn-analyze--loading {
-      cursor: default;
-      opacity: 0.9;
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-    }
-    .btn-analyze--loading:hover { transform: none; opacity: 0.9; }
-
-    .spinner {
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255,255,255,0.45);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .editor-card__error {
-      margin: 0 24px 18px;
-      padding: 12px 16px;
-      background: #fff2f1;
-      border: 1px solid #ffd4d0;
-      border-radius: 10px;
-      color: #c0392b;
-      font-size: 0.84rem;
-      font-weight: 500;
-      line-height: 1.5;
-    }
-
-    /* ─── RESULTS ──────────────────────────── */
-    .results {
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 20px 16px 100px;
-    }
-
-    .results__head {
-      text-align: center;
-      margin-bottom: 30px;
-    }
-
-    .results__eyebrow {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: #3da8cf;
-      margin-bottom: 8px;
-    }
-
-    .results__title {
-      font-size: clamp(1.6rem, 4vw, 2.2rem);
-      font-weight: 800;
-      color: #1c3d49;
-      letter-spacing: -0.02em;
-    }
-
-    .results__grid {
-      display: grid;
-      grid-template-columns: 5fr 4fr;
-      gap: 22px;
-      align-items: start;
-    }
-
-    .result-card {
-      background: #ffffff;
-      border-radius: 18px;
-      box-shadow: 0 6px 40px rgba(0,0,0,0.12);
-      padding: 26px 26px 28px;
-    }
-
-    .result-card__title {
-      font-size: 1.15rem;
-      font-weight: 800;
-      color: #1c3d49;
-      margin-bottom: 20px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #eef1f3;
-      letter-spacing: -0.01em;
-    }
-
-    /* Criterion rows */
-    .criterion {
-      padding: 16px 0;
-      border-bottom: 1px solid #f3f5f6;
-    }
-    .criterion:last-child { border-bottom: none; padding-bottom: 0; }
-
-    .criterion__head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 10px;
-    }
-
-    .criterion__title {
-      font-size: 0.98rem;
-      font-weight: 700;
-      color: #213b45;
-    }
-
-    .criterion__score {
-      font-size: 1.05rem;
-      font-weight: 800;
-      flex-shrink: 0;
-    }
-    .criterion__score-max {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: #b6c2c8;
-      margin-left: 1px;
-    }
-
-    .criterion__bar {
-      height: 7px;
-      border-radius: 99px;
-      background: #eef2f4;
-      overflow: hidden;
-      margin-bottom: 11px;
-    }
-    .criterion__bar-fill {
-      height: 100%;
-      border-radius: 99px;
-      transition: width 0.5s ease;
-    }
-
-    .criterion__desc {
-      font-size: 0.86rem;
-      line-height: 1.6;
-      color: #5e6f76;
-    }
-
-    /* Overall card */
-    .overall-card {
-      position: sticky;
-      top: 24px;
-      background: linear-gradient(165deg, #ffffff 0%, #f3fbfd 100%);
-    }
-
-    .overall-card__score {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 18px;
-    }
-    .overall-card__num {
-      font-size: 3.4rem;
-      font-weight: 800;
-      line-height: 1;
-      letter-spacing: -0.03em;
-    }
-    .overall-card__num-max {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #b6c2c8;
-    }
-
-    .overall-card__summary {
-      font-size: 0.92rem;
-      line-height: 1.7;
-      color: #4a5b62;
-    }
-
-
-    /* ─── RESPONSIVE ───────────────────────── */
-    @media (max-width: 768px) {
-      .results__grid {
-        grid-template-columns: 1fr;
-      }
-      .overall-card { position: static; }
-    }
-
-    @media (max-width: 576px) {
-      .editor-card__footer {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-      }
-      .btn-analyze { text-align: center; }
-    }
-</style>

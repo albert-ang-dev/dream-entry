@@ -37,6 +37,7 @@ The JSON must follow this exact structure:
     "score": <number 1-10>,
     "summary": "<3-4 sentence overall assessment of the essay>"
   },
+  "fixedEssay": "<the full essay, rewritten to address the feedback below — preserve the student's voice and story, just tighten prose, fix grammar, and strengthen weak spots>",
   "criteria": [
     {
       "title": "Authentic Voice",
